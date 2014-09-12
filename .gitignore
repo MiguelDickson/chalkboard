@@ -1,3 +1,6 @@
+## Chalkboard Specific ##
+logs/
+
 ## Eclipse ##
 *.pydevproject
 .metadata
@@ -11,6 +14,7 @@ tmp/
 local.properties
 .settings/
 .loadpath
+.project
 
 # External tool builders
 .externalToolBuilders/
