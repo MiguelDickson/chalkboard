@@ -1,0 +1,30 @@
+    #div-body1{
+    background-color:#fffed6;
+        
+    }
+    #table-body1{
+        margin-left:auto;
+        margin-right:auto;
+    }
+    #td-body1{
+        color: #438EFF;
+        font-size: 60;
+        font-family: arial;
+        padding: 3px;
+        margin: 2px;
+        border: 2px solid #438EFF;
+        text-align:center;
+        width: 600px;
+        background-color:#c6c6c6;
+    }
+    #td-body2{
+        color: #438EFF;
+        font-size: 20;
+        font-family: arial;
+        padding: 3px;
+        margin: 2px;
+        border: 2px solid #438EFF;
+        text-align:left;
+        width: 600px;
+        background-color:#c6c6c6;
+    }
