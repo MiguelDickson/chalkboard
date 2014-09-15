@@ -1,0 +1,39 @@
+	a.coloredLink {
+    color: inherit; /* Set the link to inherit the original color */
+	text-decoration: none;
+	}
+	#header{
+		width: 1280px;
+		padding: 30px;
+		padding-top: 10px;
+		padding-left: 10px;
+		border: 0px;
+		margin: 20px;
+		background-color: #c6c6c6;
+	}
+	#logo{
+		font-family: ChalkLetters;
+		font-size: 60;
+		text-decoration: underline;
+		color: #438EFF;
+	}
+	#teacherLogin{
+		position: absolute;
+		top: 25px;
+		left: 1070px;
+		padding: 3px;
+		border: 2px solid #438EFF;
+		font-family: ChalkLetters;
+		font-size: 20;
+		color: #438EFF;
+	}
+	#studentLogin{
+		position: absolute;
+		top: 80px;
+		left: 1070px;
+		padding: 3px;
+		border: 2px solid #438EFF;
+		font-family: ChalkLetters;
+		font-size: 20;
+		color: #438EFF;
+	}
