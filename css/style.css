@@ -1,15 +1,22 @@
+	@font-face { /* Load the new "chalk" font */
+	font-family: ChalkLetters;
+	src: url(../fonts/SqueakyChalkSound.ttf); 
+	} 
+	body {
+		background-color: #c6c6c6;
+	}
     #div-body1{
-    background-color:#fffed6;
-        
+		background-color:#c6c6c6;
     }
     #table-body1{
         margin-left:auto;
         margin-right:auto;
+		background-color: #c6c6c6;
     }
     td.body1{
         color: #438EFF;
-        font-size: 60;
-        font-family: arial;
+        font-size: 30;
+        font-family: ChalkLetters, arial;
         padding: 3px;
         margin: 2px;
         border: 2px solid #438EFF;
@@ -20,7 +27,7 @@
     td.body2{
         color: #438EFF;
         font-size: 20;
-        font-family: arial;
+        font-family: ChalkLetters, arial;
         padding: 3px;
         margin: 2px;
         border: 2px solid #438EFF;
