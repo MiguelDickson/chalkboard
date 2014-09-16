@@ -2,21 +2,29 @@
     color: inherit; /* Set the link to inherit the original color */
 	text-decoration: none;
 	}
+	
 	#header{
-		width: 1280px;
-		padding: 30px;
-		padding-top: 10px;
-		padding-left: 10px;
-		border: 0px;
-		margin: 20px;
-		background-color: #c6c6c6;
+		height: 50px;
+		background-color: #000;
+		position: relative;
+		display: block;
+		padding: 25px 10px 0px 10px;
 	}
+	
 	#logo{
-		font-family: ChalkLetters;
+		display: inline-block;
+		float: left;
 		font-size: 60;
 		text-decoration: underline;
 		color: #438EFF;
 	}
+	
+	#loginDiv {
+		display: inline-block;
+		float: right;
+		border: 1px solid white;
+	}
+	
 	#teacherLogin{
 		position: absolute;
 		top: 25px;
@@ -27,6 +35,7 @@
 		font-size: 20;
 		color: #438EFF;
 	}
+	
 	#studentLogin{
 		position: absolute;
 		top: 80px;

@@ -1,20 +1,32 @@
 	@font-face { /* Load the new "chalk" font */
 	font-family: ChalkLetters;
 	src: url(../fonts/SqueakyChalkSound.ttf); 
-	} 
+	}
+	 
 	body {
 		background-color: #c6c6c6;
 		font-family: ChalkLetters, arial, sans-serif;
 		color: #438EFF;
 	}
+	
+	#bodyarea {
+		background-color: #ffffff;
+		width: 80%;
+		margin-top: 20px;
+		margin-left: auto;
+		margin-right: auto;
+		box-shadow: 10px 8px 10px #888888;
+		
+	}
+	
     #div-body1{
-		background-color:#c6c6c6;
     }
+    
     #table-body1{
         margin-left:auto;
         margin-right:auto;
-		background-color: #c6c6c6;
     }
+    
     td.body1{
         font-size: 30;
         padding: 3px;
@@ -22,8 +34,8 @@
         border: 2px solid #438EFF;
         text-align:center;
         width: 600px;
-        background-color:#c6c6c6;
     }
+    
     td.body2{
         font-size: 20;
         padding: 3px;
@@ -31,5 +43,4 @@
         border: 2px solid #438EFF;
         text-align:left;
         width: 600px;
-        background-color:#c6c6c6;
     }
