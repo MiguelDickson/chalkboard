@@ -4,6 +4,8 @@
 	} 
 	body {
 		background-color: #c6c6c6;
+		font-family: ChalkLetters, arial, sans-serif;
+		color: #438EFF;
 	}
     #div-body1{
 		background-color:#c6c6c6;
@@ -14,9 +16,7 @@
 		background-color: #c6c6c6;
     }
     td.body1{
-        color: #438EFF;
         font-size: 30;
-        font-family: ChalkLetters, arial;
         padding: 3px;
         margin: 2px;
         border: 2px solid #438EFF;
@@ -25,9 +25,7 @@
         background-color:#c6c6c6;
     }
     td.body2{
-        color: #438EFF;
         font-size: 20;
-        font-family: ChalkLetters, arial;
         padding: 3px;
         margin: 2px;
         border: 2px solid #438EFF;
