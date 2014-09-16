@@ -11,5 +11,7 @@ handlers:
   static_dir: img
 - url: /js
   static_dir: js
+- url: /fonts
+  static_dir: fonts
 - url: /.*
   script: app.Controler.application
