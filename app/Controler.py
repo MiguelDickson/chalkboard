@@ -6,7 +6,8 @@ Created on Sep 11, 2014
 
 import webapp2 
 import logging
-import string
+from string import Template
+from time import strftime
 
 # logging setup
 # TODO set to INFO in production
@@ -24,7 +25,7 @@ class IntroHandler(webapp2.RequestHandler):
         htmlstr = self.buildIntroHTMLString()
         
         # create template
-        htmltmpl = string.Template(htmlstr)
+        htmltmpl = Template(htmlstr)
         
         # map dynamic content elements
         mapping = self.buildIntroMapping()
@@ -57,6 +58,7 @@ class IntroHandler(webapp2.RequestHandler):
         """ Determine and return template tag mapping """
         mapping = dict()
         mapping['page_title'] = 'Pitt Chalkboard'
+        mapping['current_year'] = strftime('%Y')
         return mapping
     
     

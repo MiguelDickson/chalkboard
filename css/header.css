@@ -5,7 +5,7 @@
 	
 	#header{
 		height: 50px;
-		background-color: #000;
+		background-color: #696969;
 		position: relative;
 		display: block;
 		padding: 25px 10px 0px 10px;
@@ -22,7 +22,7 @@
 	#loginDiv {
 		display: inline-block;
 		float: right;
-		border: 1px solid white;
+		margin-right: 15px;
 	}
 	
 	#teacherLogin{

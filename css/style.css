@@ -11,7 +11,8 @@
 	
 	#bodyarea {
 		background-color: #ffffff;
-		width: 80%;
+		width: 85%;
+		padding: 30px;
 		margin-top: 20px;
 		margin-left: auto;
 		margin-right: auto;
@@ -19,28 +20,41 @@
 		
 	}
 	
-    #div-body1{
+    .introbodytable {
+    	margin-left: auto;
+    	margin-right: auto;
+    	margin-bottom: 15px;
+    	width: 600px;
     }
     
-    #table-body1{
-        margin-left:auto;
-        margin-right:auto;
+    .introbodytable th {
+    	text-align: center;
+    	border: 2px solid #438EFF;
     }
     
-    td.body1{
-        font-size: 30;
-        padding: 3px;
-        margin: 2px;
-        border: 2px solid #438EFF;
-        text-align:center;
-        width: 600px;
-    }
-    
-    td.body2{
+    .introbodytable td {
         font-size: 20;
         padding: 3px;
         margin: 2px;
         border: 2px solid #438EFF;
-        text-align:left;
-        width: 600px;
     }
+    
+    #footerAbout {
+    	text-align: center;
+    }
+
+	a:link {
+	    color: #438EFF;
+	}
+	
+	a:visited {
+	    color: #438EFF;
+	}
+	
+	a:hover {
+	    color: #438EFF;
+	}
+	
+	a:active {
+	    color: #438EFF;
+	}
