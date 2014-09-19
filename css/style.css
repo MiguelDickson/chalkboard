@@ -110,25 +110,3 @@
 		float: right;
 		margin-right: 15px;
 	}
-	
-	#teacherLogin{
-		position: absolute;
-		top: 25px;
-		left: 1070px;
-		padding: 3px;
-		border: 2px solid #438EFF;
-		font-family: ChalkLetters;
-		font-size: 20;
-		color: #438EFF;
-	}
-	
-	#studentLogin{
-		position: absolute;
-		top: 80px;
-		left: 1070px;
-		padding: 3px;
-		border: 2px solid #438EFF;
-		font-family: ChalkLetters;
-		font-size: 20;
-		color: #438EFF;
-	}
