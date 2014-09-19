@@ -1,6 +1,6 @@
 	@font-face { /* Load the new "chalk" font */
-	font-family: ChalkLetters;
-	src: url(../fonts/SqueakyChalkSound.ttf); 
+		font-family: ChalkLetters;
+		src: url(../fonts/SqueakyChalkSound.ttf); 
 	}
 	 
 	body {
@@ -18,6 +18,10 @@
 		margin-right: auto;
 		box-shadow: 10px 8px 10px #888888;
 		
+	}
+
+	#footer {
+		margin-top: 30px;
 	}
 	
     .introbodytable {
@@ -57,4 +61,74 @@
 	
 	a:active {
 	    color: #438EFF;
+	}
+
+
+	/**** 404/Error ****/
+
+	.smallbody {
+		text-align: center;
+		max-width: 40%;
+		min-height: 400px;
+		background-color: #ffffff;
+		padding: 60px 30px 30px 30px;
+		margin-top: 20px;
+		margin-left: auto;
+		margin-right: auto;
+		box-shadow: 10px 8px 10px #888888
+	}
+
+	#body404 h1 {
+		font-style: oblique;
+	}
+
+	/**** Header ****/
+
+	a.coloredLink {
+    	color: inherit; /* Set the link to inherit the original color */
+		text-decoration: none;
+	}
+	
+	#header{
+		height: 50px;
+		background-color: #696969;
+		position: relative;
+		display: block;
+		padding: 25px 10px 0px 10px;
+	}
+	
+	#logo{
+		display: inline-block;
+		float: left;
+		font-size: 60;
+		text-decoration: underline;
+		color: #438EFF;
+	}
+	
+	#loginDiv {
+		display: inline-block;
+		float: right;
+		margin-right: 15px;
+	}
+	
+	#teacherLogin{
+		position: absolute;
+		top: 25px;
+		left: 1070px;
+		padding: 3px;
+		border: 2px solid #438EFF;
+		font-family: ChalkLetters;
+		font-size: 20;
+		color: #438EFF;
+	}
+	
+	#studentLogin{
+		position: absolute;
+		top: 80px;
+		left: 1070px;
+		padding: 3px;
+		border: 2px solid #438EFF;
+		font-family: ChalkLetters;
+		font-size: 20;
+		color: #438EFF;
 	}
