@@ -58,12 +58,28 @@
     }
     
     .introbodytable td {
+		opacity: 0;
         font-size: 20;
         padding: 3px;
         margin: 2px;
         border: 2px solid #438EFF;
         text-align: left;
+		-webkit-transition: opacity, 0.5s linear;
+		-moz-transition: opacity, 0.5s linear;
+		-ms-transition: opacity, 0.5s linear;
+		-o-transition: opacity, 0.5s linear;
+		transition: opacity, 0.5s linear;
     }
+	
+	.introbodytable:hover td
+	{
+		opacity: 1;
+		-webkit-transition: opacity, 0.5s linear;
+		-moz-transition: opacity, 0.5s linear;
+		-ms-transition: opacity, 0.5s linear;
+		-o-transition: opacity, 0.5s linear;
+		transition: opacity, 0.5s linear;
+	}
 
 
     /*** Footer ***/
