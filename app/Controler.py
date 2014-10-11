@@ -1,13 +1,10 @@
-'''
-Created on Sep 11, 2014
-
-@author: Clint Liddick
-'''
-
+import os
 import webapp2
 import logging
-from string import Template
-from time import strftime
+from google.appengine.ext.webapp import template
+from google.appengine.api import users 			
+from google.appengine.ext import db 			 
+from datetime import date
 
 # logging setup
 # TODO set to INFO in production
@@ -15,120 +12,81 @@ logging.getLogger(__name__).setLevel(logging.DEBUG)
 
 
 # General Utilities
+def renderTemplate(response, templatename, templatevalues) :
+    basepath = os.path.split(os.path.dirname(__file__)) #extract the base path, since we are in the "app" folder instead of the root folder
+    path = os.path.join(basepath[0], 'templates/' + templatename)
+    html = template.render(path, templatevalues)
+	
+    response.out.write(html)
 
-def buildHeading():
-    """returns the <head> and header HTML"""
-    htmlstr = ''
-    with open('html/head.tmpl', 'r') as headfile:
-        htmlstr += headfile.read()
-
-    with open('html/header.tmpl', 'r') as headerfile:
-        htmlstr += headerfile.read()
-
-    return htmlstr
-
-
-def buildFooter():
-    """returns the footer and HTML closing"""
-    htmlstr = ''
-    with open('html/footer.tmpl', 'r') as footerfile:
-        htmlstr = footerfile.read()
-
-    return htmlstr
-
-
-def buildBaseMapping():
-    """ Determine and return template tag mapping """
-    mapping = dict()
-    mapping['page_title'] = 'Pitt Chalkboard'
-    mapping['current_year'] = strftime('%Y')
-    return mapping
-
-def handle404(request, response, exception):
+def handle404(request, response, exception) :
     """ Custom 404 error page """
-    
+    logging.debug('404 Error GET request: ' + str(request))
     logging.exception(exception)
-    htmlstr = buildHeading()
-    with open('html/404.tmpl', 'r') as errorfile:
-        htmlstr += errorfile.read()
-        htmlstr += buildFooter()
-
-    htmltmpl = Template(htmlstr)
-    mapping = buildBaseMapping()
-    htmlout = htmltmpl.substitute(mapping)
-
-    response.headers['Content-Type'] = 'text/html'
-    response.set_status(404)
-    response.write(htmlout)
+    
+    template_values = {
+        'page_title' : "Page Not Found",
+        'current_year' : date.today().year
+    }
+		
+    renderTemplate(response, '404.html', template_values)
 
 
 # Handler classes
 class IntroHandler(webapp2.RequestHandler):
-
     """RequestHandler for initial intro page"""
 
     def get(self):
         """Intro page GET request handler"""
-        logging.debug('GET request: ' + str(self.request))
-
-        # create raw html string for template
-        htmlstr = buildHeading()
-        htmlstr += self.buildIntroHTMLString()
-        htmlstr += buildFooter()
-
-        # create template
-        htmltmpl = Template(htmlstr)
-
-        # map dynamic content elements
-        mapping = buildBaseMapping()
-
-        # substitute mapped tags
-        htmlout = htmltmpl.substitute(mapping)
-
-        self.response.headers['Content-Type'] = 'text/html'
-        self.response.write(htmlout)
-
-    def buildIntroHTMLString(self):
-        htmlstr = ''
-        with open('html/introbody.tmpl', 'r') as bodyfile:
-            htmlstr += bodyfile.read()
-
-        return htmlstr
-
+        logging.debug('IntroHandler GET request: ' + str(self.request))
+		
+        template_values = {
+            'page_title' : "Chalkboard",
+            'current_year' : date.today().year
+        }
+		
+        renderTemplate(self.response, 'index.html', template_values)
+		
     def handle_exception(self, exception, debug):
         # overrides the built-in master exception handler
-        logging.error(
-            'Template mapping exception, unmapped tag: ' + str(exception))
-        # TODO create general error page
+        logging.error('Template mapping exception, unmapped tag: ' + str(exception))
+        
         return self.redirect(uri='/error', code=307)
 
 
 class ErrorHandler(webapp2.RequestHandler):
-
     """Request handler for error pages"""
 
     def get(self):
-        logging.debug('GET request: ' + str(self.request))
+        logging.debug('ErrorHandler GET request: ' + str(self.request))
 
-        htmlstr = buildHeading()
-        with open('html/error.tmpl', 'r') as errorfile:
-            htmlstr += errorfile.read()
-        htmlstr += buildFooter()
-        
-        htmltmpl = Template(htmlstr)
-        mapping = buildBaseMapping()
-        htmlout = htmltmpl.substitute(mapping)
-        
-        self.response.headers['Content-Type'] = 'text/html'
-        self.response.write(htmlout)
+        template_values = {
+            'page_title' : "Oh no...",
+            'current_year' : date.today().year
+        }
+		
+        renderTemplate(self.response, 'error.html', template_values)
 
+class AboutHandler(webapp2.RequestHandler) :
+    """Request handler for about page"""
+
+    def get(self):
+        logging.debug('AboutHandler GET request: ' + str(self.request))
+
+        template_values = {
+            'page_title' : "About Chalkboard",
+            'current_year' : date.today().year
+        }
+
+        renderTemplate(self.response, 'about.html', template_values)
 
 
 # list of URI/Handler routing tuples
 # the URI is a regular expression beginning with root '/' char
 routeHandlers = [
     (r'/', IntroHandler),
-    (r'/error', ErrorHandler),
+	(r'/about', AboutHandler),
+    (r'/error', ErrorHandler)
 ]
 
 # application object

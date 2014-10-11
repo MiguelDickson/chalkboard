@@ -88,7 +88,7 @@
 		margin-top: 30px;
 		text-align: center;
 	}
-
+	
 	a:link {
 	    color: #438EFF;
 	}
@@ -99,6 +99,7 @@
 	
 	a:hover {
 	    color: #438EFF;
+		text-shadow: 0 0 4px #6699FF;
 	}
 	
 	a:active {
@@ -125,31 +126,36 @@
 	}
 
 	/**** Header ****/
-
-	a.coloredLink {
-    	color: inherit; /* Set the link to inherit the original color */
-		text-decoration: none;
-	}
-	
 	#header{
 		height: 50px;
 		background-color: #696969;
 		position: relative;
 		display: block;
+		font-size: 35px;
 		padding: 25px 10px 0px 10px;
 		border-radius: 10px;
 	}
 	
 	#logo{
+		margin-top: -14px; 
 		display: inline-block;
 		float: left;
-		font-size: 60;
-		text-decoration: underline;
 		color: #438EFF;
+		margin-left: 15px;
+	}
+	
+	#logo a:hover{
+		text-shadow: 0 0 12px #505050;
 	}
 	
 	#loginDiv {
+		margin-top: -6px; 
 		display: inline-block;
 		float: right;
+		font-size: 23;
 		margin-right: 15px;
+	}
+	
+	#loginDiv a:hover{
+		text-shadow: 0 0 12px #505050;
 	}
