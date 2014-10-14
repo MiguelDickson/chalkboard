@@ -53,6 +53,25 @@ class IntroHandler(webapp2.RequestHandler):
         
         return self.redirect(uri='/error', code=307)
 
+class InstructorHandler(webapp2.RequestHandler):
+    """RequestHandler for instructor page"""
+
+    def get(self):
+        """Instructor page GET request handler"""
+        logging.debug('InstructorHandler GET request: ' + str(self.request))
+		
+        template_values = {
+            'page_title' : "Chalkboard",
+            'current_year' : date.today().year
+        }
+		
+        renderTemplate(self.response, 'instructor.html', template_values)
+		
+    def handle_exception(self, exception, debug):
+        # overrides the built-in master exception handler
+        logging.error('Template mapping exception, unmapped tag: ' + str(exception))
+        
+        return self.redirect(uri='/error', code=307)
 
 class ErrorHandler(webapp2.RequestHandler):
     """Request handler for error pages"""
@@ -86,7 +105,8 @@ class AboutHandler(webapp2.RequestHandler) :
 routeHandlers = [
     (r'/', IntroHandler),
 	(r'/about', AboutHandler),
-    (r'/error', ErrorHandler)
+    (r'/error', ErrorHandler),
+    (r'/instructor', InstructorHandler)
 ]
 
 # application object
