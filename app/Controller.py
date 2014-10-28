@@ -141,7 +141,7 @@ class InstructorHandler(webapp2.RequestHandler):
                 'page_title' : "Chalkboard",
                 'current_year' : date.today().year,
                 'logout' : users.create_logout_url('/'),
-                'courses' : user_data.courses
+                'courses' : CourseData.get(user_data.courses)
             }
         else : 
             self.redirect(users.create_login_url('/instructor'))   
@@ -207,7 +207,7 @@ class InstructorHandler(webapp2.RequestHandler):
                     'page_title' : "Chalkboard",
                     'current_year' : date.today().year,
                     'logout' : logout_url,
-                    'courses' : user_data.courses
+                    'courses' : CourseData.get(user_data.courses)
                 }
                 
         else :
@@ -244,7 +244,7 @@ class DocumentsHandler(webapp2.RequestHandler):
                 'page_title' : "Chalkboard",
                 'current_year' : date.today().year,
                 'logout' : logout_url,
-                'courses' : user_data.courses
+                'courses' : CourseData.get(user_data.courses)
             }
             
         else:
@@ -282,7 +282,7 @@ class DocumentsHandler(webapp2.RequestHandler):
                     'page_title' : "Chalkboard",
                     'current_year' : date.today().year,
                     'logout' : logout_url,
-                    'course' : courses,
+                    'courses' : CourseData.get(user_data.courses),
                     'upload_url' : upload_url
                 }
             #if no data was received, redirect to new course page (to make data)
