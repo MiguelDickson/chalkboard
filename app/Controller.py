@@ -344,7 +344,7 @@ class AboutHandler(webapp2.RequestHandler) :
 class CourseHandler(webapp2.RequestHandler) :
     """Request handler for Course pages (public view)"""
     def get(self):
-        logging.debut('CourseHandler GET request: ' + str(self.request))
+        logging.debug('CourseHandler GET request: ' + str(self.request))
         
         template_values = {
             'page_title' : "About Chalkboard",
@@ -362,8 +362,8 @@ routeHandlers = [
     (r'/instructor', InstructorHandler),
     (r'/documents', DocumentsHandler),
     (r'/upload', UploadHandler),
-    (r'/course/*', CourseHandler), #Default catch all to handle a course page request
-    (r'/*', ErrorHandler)
+    (r'/course/.*', CourseHandler), #Default catch all to handle a course page request
+    (r'/.*', ErrorHandler)
 ]
 
 # application object
