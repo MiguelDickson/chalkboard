@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 	{% block bodycontent %}
 		<div id="bodyarea">
-			Hello, {{nickname}}! <br>
 			<a href="{{logout}}">Click Here to sign out.</a>
 		
 			<div id="introText" class="introColumn">
@@ -10,8 +9,13 @@
 				<br>
 				<form method="post" action="/instructor">
 					Course Name: <input type="text" name="course"><br>
+					Course Number: <input type="number" name="number"><br>
 					Instructor Name: <input type="text" name="name"><br>
 					Instructor Email: <input type="text" name="email"><br>
+					University: <input type="text" name="university"><br>
+					Department: <input type="text" name="department"><br>
+					Semester: <input type="text" name ="semester"><br>
+					Year: <input type="number" name="year"><br>
 					<input type="submit">
 				</form>
 			</div>
