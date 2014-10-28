@@ -14,12 +14,31 @@ logging.getLogger(__name__).setLevel(logging.DEBUG)
 
 
 # General Utilities
+class CourseData(db.Model):
+    document_list = db.ListProperty(blobstore.BlobKey,indexed=False, default=[]) #Stores the keys for a list of documents
+    course_name = db.StringProperty()
+    course_number = db.IntegerProperty()
+    student_list = db.StringListProperty() #Stores a list of string (emails)
+    URL = db.StringProperty() #URL in the form /course/ID
+    department = db.StringProperty()
+    university = db.StringProperty()
+    instructor = db.StringProperty()
+    email = db.StringProperty()
+    year = db.IntegerProperty()
+    semester = db.StringProperty()
+    syllabus = blobstore.BlobReferenceProperty() #Store the reference to syllabus in blobstore
+    is_active = db.BooleanProperty()
+    #TODO: calendar entry goes here eventually (not sure how to store it since this task should be hard)
+
 class UserData(db.Model) :
     user_id = db.StringProperty()
-    course_name = db.StringProperty()
     user_name = db.StringProperty()
     user_email = db.StringProperty()
-    documentlist = db.ListProperty(blobstore.BlobKey,indexed=False, default=[]);
+    courses = db.ListProperty(db.Key) #Stores a list of keys for courses
+    is_active = db.BooleanProperty()
+	
+def generateURL() :
+	return "/course/123" #TODO: Generate real IDs
 
 def renderTemplate(response, templatename, templatevalues) :
     basepath = os.path.split(os.path.dirname(__file__)) #extract the base path, since we are in the "app" folder instead of the root folder
@@ -63,45 +82,71 @@ class IntroHandler(webapp2.RequestHandler):
         return self.redirect(uri='/error', code=307)
         
 class InstructorHandler(webapp2.RequestHandler):
-    """RequestHandler for instructor page"""
+    """RequestHandler for instructor page"""   
     def post(self):
-        name = self.request.get('name')
-        email = self.request.get('email')
-        course = self.request.get('course')
+        logging.debug('Instructorandler POST request: ' + str(self.request))
         
-        logging.debug('InstructorHandler POST request: ' + str(self.request))
-    
-        user = users.get_current_user();
+        #retrieve the current user
+        user = users.get_current_user()
         
-        template_values = {}
-        if user:
-            #stores data
-            user_data = UserData()
+        login_url = ''
+        logout_url = '';
+        
+        target_page = 'instructor.html'
+        
+        template_values = {
             
-            user_data.user_id = user.user_id()
-            user_data.user_name = name            
-            user_data.user_email = email            
-            user_data.course_name = course
-            user_data.documents_list = [""];
+        }
+        
+        if user :
+            #grab all the post parameters and store into a course db model
+            course = CourseData()
             
-            user_data.put()
+            course.course_name = self.request.get('course')
+            course.instructor = self.request.get('name')
+            course.email = self.request.get('email')
+            course.course_number = int(self.request.get('number'))
+            course.university = self.request.get('university')
+            course.department = self.request.get('department')
+            course.semester = self.request.get('semester')
+            course.year = int(self.request.get('year'))
+            course.student_list = [""]
+            course.is_active = True
+            course.URL = generateURL()
+            course.documents_list = [""]
+            course.syllabus = None
             
-            logout_url = users.create_logout_url('/')
+            course.put()
+            
+            
+            d = UserData.all()
+            d.filter('user_id =', user.user_id())
+            
+            if d.count(0) :
+                #stores data since no user with this ID is found
+                user_data = UserData()
+                user_data.user_id = user.user_id()
+                user_data.user_name = user.nickname()            
+                user_data.user_email = user.email()    
+                user_data.is_active = True
+                user_data.courses = [course]
+                
+                user_data.put()
+            else :
+                for user_data in d.run():
+                    user_data.courses.append(course.key()) #Add course key to user data
+                    user_data.put()
             
             template_values = {
                 'page_title' : "Chalkboard",
                 'current_year' : date.today().year,
-                'logout' : logout_url,
-                'email' : user_data.user_email,
-                'nickname' : user_data.user_name,
-                'course' : user_data.course_name,
+                'logout' : users.create_logout_url('/'),
+                'courses' : user_data.courses
             }
+        else : 
+            self.redirect(users.create_login_url('/instructor'))   
             
-        else:
-            self.redirect(users.create_login_url('/instructor'))
-
-        #redirects back to instructor page (should show new data)
-        renderTemplate(self.response, 'instructor.html', template_values)
+        renderTemplate(self.response, target_page, template_values)
     
     def get(self):
         """Instructor page GET request handler"""
@@ -133,26 +178,36 @@ class InstructorHandler(webapp2.RequestHandler):
             #if data was received, grab it
             if d.count(1):
                 for user_data in d.run():
-                    email = user_data.user_email
-                    name = user_data.user_name
-                    course = user_data.course_name
                 
-                template_values = {
-                    'page_title' : "Chalkboard",
-                    'current_year' : date.today().year,
-                    'logout' : logout_url,
-                    'email' : email,
-                    'nickname' : name,
-                    'course' : course,
-                }
-            #if no data was received, redirect to new course page (to make data)
+					#If we have at least a course, display them
+							
+                    template_values = {
+                        'page_title' : "Chalkboard",
+                        'current_year' : date.today().year,
+                        'logout' : logout_url
+                    }
+                        
+                    target_page = "new_course.html"
+            #if no data was received, add data entry
             else:
-                target_page = 'new_course.html'
+                #stores data
+                user_data = UserData()
+            
+                user_data.user_id = user.user_id()
+                user_data.user_name = user.nickname()            
+                user_data.user_email = user.email()    
+                user_data.is_active = True
+                user_data.courses = []
+            
+                user_data.put()
+            
+                logout_url = users.create_logout_url('/')
+            
                 template_values = {
                     'page_title' : "Chalkboard",
                     'current_year' : date.today().year,
                     'logout' : logout_url,
-                    'nickname' : user.nickname(),
+                    'courses' : user_data.courses
                 }
                 
         else :
@@ -189,9 +244,7 @@ class DocumentsHandler(webapp2.RequestHandler):
                 'page_title' : "Chalkboard",
                 'current_year' : date.today().year,
                 'logout' : logout_url,
-                'email' : user_data.user_email,
-                'nickname' : user_data.user_name,
-                'course' : user_data.course_name,
+                'courses' : user_data.courses
             }
             
         else:
@@ -229,9 +282,7 @@ class DocumentsHandler(webapp2.RequestHandler):
                     'page_title' : "Chalkboard",
                     'current_year' : date.today().year,
                     'logout' : logout_url,
-                    'email' : email,
-                    'nickname' : name,
-                    'course' : course,
+                    'course' : courses,
                     'upload_url' : upload_url
                 }
             #if no data was received, redirect to new course page (to make data)
@@ -289,6 +340,18 @@ class AboutHandler(webapp2.RequestHandler) :
         }
 
         renderTemplate(self.response, 'about.html', template_values)
+        
+class CourseHandler(webapp2.RequestHandler) :
+    """Request handler for Course pages (public view)"""
+    def get(self):
+        logging.debut('CourseHandler GET request: ' + str(self.request))
+        
+        template_values = {
+            'page_title' : "About Chalkboard",
+            'current_year' : date.today().year
+        }
+        
+        renderTemplate(self.response, 'error.html', template_values) #TODO: temporary redirect
 
 # list of URI/Handler routing tuples
 # the URI is a regular expression beginning with root '/' char
@@ -298,7 +361,9 @@ routeHandlers = [
     (r'/error', ErrorHandler),
     (r'/instructor', InstructorHandler),
     (r'/documents', DocumentsHandler),
-    (r'/upload', UploadHandler)
+    (r'/upload', UploadHandler),
+    (r'/course/*', CourseHandler), #Default catch all to handle a course page request
+    (r'/*', ErrorHandler)
 ]
 
 # application object
