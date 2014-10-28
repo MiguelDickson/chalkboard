@@ -1,21 +1,16 @@
 {% extends "base.html" %}
 	{% block bodycontent %}
 		<div id="bodyarea">
-			Hello, {{nickname}}! <br>
-			<a href="{{logout}}">Click Here to sign out.</a>
-		
 			<div id="introText" class="introColumn">
-				<h1>{{course}}</h1>
-				<h3>From this page, the instructor can perform the following functions:
+				<h2>Course List: </h2>
 				<br>
 				<br>
-				<a href="">Edit Profile</a><br>
-				<a href="">Manage Students</a><br>
-				<a href="/documents">Upload Documents</a><br>
-				<a href="">Manage Calendar</a><br>
-				<a href="">Manage Syllabus</a><br>
+				{% for course in courses %}
+				{{course}} <br><br>
+				{% endfor %}
+				<a href="/instructor">Create New Course</a>
 				</ul>
-				</h3>
+
 			</div>
 		</div>
 	{% endblock %}
