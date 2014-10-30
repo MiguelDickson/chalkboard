@@ -340,7 +340,6 @@ class SendEmailHandler(webapp2.RequestHandler):
         if user is None:
             #logging.error('SendEmail Handler: not logged in for some reason.')    
         if user:
-            #logging.error('Here all right so far.')
             logout_url = users.create_logout_url('/')
             d = UserData.all()
             d.filter('user_id =', user.user_id())
@@ -360,15 +359,17 @@ class SendEmailHandler(webapp2.RequestHandler):
                                 'student_list' : students,
                                 'page_title' : "Chalkboard",
                                 'current_year' : date.today().year,
-                                'logout' : logout_url            
+                                'logout' : users.get_logout_url     
+                                'login' : users.get_login_url  
+                                'user' : users.get_current_user
                             }
                         renderTemplate(self.response, 'send_email.html', template_values)                            
                     else:
-                        self.redirect(users.create_login_url('/instructor'))
+                        self.redirect('/instructor'))
             else:
-                self.redirect(users.create_login_url('/insructor'))           
+                self.redirect('/insructor')           
         else:
-            self.redirect(users.create_login_url('/instructor'))
+            self.redirect('/instructor'))
         
         
  
@@ -395,6 +396,7 @@ class EmailHandler(webapp2.RequestHandler):
                 message.body = self.request.get('message_body')
                 message.to = user.email()
                 message.send()
+                self.redirect(users.create_
         
         
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler) :
@@ -402,7 +404,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler) :
         logging.debug('UploadHandler POST request: ' + str(self.request))
         upload_files = self.get_uploads('file')
         blob_info = upload_files[0];
-        self.redirect(users.create_login_url('/instructor'))
+        self.redirect('/instructor')
         user = users.get_current_user();
         d = UserData.all()
         d.filter('user_id =', user.user_id())
