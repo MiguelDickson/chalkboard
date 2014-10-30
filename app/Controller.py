@@ -3,6 +3,7 @@ import webapp2
 import logging
 from google.appengine.ext.webapp import template
 from google.appengine.api import users             
+from google.appengine.api import mail 
 from google.appengine.ext import db 
 from google.appengine.ext import blobstore     
 from google.appengine.ext.webapp import blobstore_handlers         
@@ -36,10 +37,21 @@ class UserData(db.Model) :
     user_email = db.StringProperty()
     courses = db.ListProperty(db.Key) #Stores a list of keys for courses
     is_active = db.BooleanProperty()
+    current_course_selected = db.StringProperty()
 	
 def generateID() :
 	return '1234' #TODO: Generate real IDs
 
+def generateClassEmails(student_list) : 
+    class_list = ""
+    l = len(student_list)
+    #logging.error("The length of the student list is:")
+    #logging.error(l)
+    for num in xrange(0, l-2):
+        class_list += student_list[num]
+        class_list += ","
+    class_list+=student_list[len(student_list)-1]
+    return class_list
 def renderTemplate(response, templatename, templatevalues) :
     basepath = os.path.split(os.path.dirname(__file__)) #extract the base path, since we are in the "app" folder instead of the root folder
     path = os.path.join(basepath[0], 'templates/' + templatename)
@@ -110,7 +122,6 @@ class NewCourseHandler(webapp2.RequestHandler):
         
         #Else - not logged in or not a user of our site, so redirect
         self.redirect(users.create_login_url('/instructor')) 
-        
     def post(self):
         logging.debug('New Course POST request: ' + str(self.request))
         
@@ -149,10 +160,8 @@ class NewCourseHandler(webapp2.RequestHandler):
                     course.course_id = generateID()
                     course.documents_list = [""]
                     course.syllabus = None
-                    
                     course.put()
-            
-                    user_data.courses.append(course.key()) #Add course key to user data
+                    user_data.course.append(course.key()) #Add course key to user data
                     user_data.put()
             
                     self.redirect('/instructor')
@@ -330,7 +339,69 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler) :
             for user_data in d.run():
                 user_data.documentlist.append(blob_info.key());
                 user_data.put();
-        
+
+class SendEmailHandler(webapp2.RequestHandler):
+    def get(self):
+        #logging.error('Here succesfully, I guess...')
+        user = users.get_current_user()
+        if user is None:
+            #logging.error('SendEmail Handler: not logged in for some reason.')    
+        if user:
+            logout_url = users.create_logout_url('/')
+            d = UserData.all()
+            d.filter('user_id =', user.user_id())
+            if d.count(1):
+                #logging.error('Here all right so far. #2')
+                for user_data in d.run():
+                    current_course = user_data.current_course_selected
+                    logging.error(current_course)
+                    e = CourseData.all()
+                    e.filter('course_id =', current_course)
+                    if e.count(1):
+                        #logging.error('Here all right so far. #3')
+                        for course_info in e.run():
+                            students = course_info.student_list     
+                            template_values = {
+                                'current_course' : course_info,
+                                'student_list' : students,
+                                'page_title' : "Chalkboard",
+                                'current_year' : date.today().year,
+                                'logout' : users.get_logout_url     
+                                'login' : users.get_login_url  
+                                'user' : users.get_current_user
+                            }
+                        renderTemplate(self.response, 'send_email.html', template_values)                            
+                    else:
+                        self.redirect('/instructor')
+            else:
+                self.redirect('/insructor')           
+        else:
+            self.redirect('/instructor')
+ 
+class EmailHandler(webapp2.RequestHandler):
+    def post(self):
+        user = users.get_current_user()
+        if user is None:
+            self.redirect('/instructor')
+        message = mail.EmailMessage()
+        message.sender = user.email()
+        d = UserData.all()
+        d.filter('user_id =', user.user_id())
+        for user_data in d.run(): 
+            current_course = user_data.current_course_selected
+            #logging.error(current_course)
+            e = CourseData.all()
+            e.filter('course_id =', current_course)
+            for course_info in e.run():
+                stu_list = course_info.student_list
+                bcc_list = generateClassEmails(stu_list)
+                #logging.error("The first student in the list is: " + stu_list[0])
+                #logging.error("The message body was:" + self.request.get('message_body'))
+                message.bcc = bcc_list
+                message.body = self.request.get('message_body')
+                message.to = user.email()
+                message.send()
+                self.redirect('/instructor')               
         
 class ErrorHandler(webapp2.RequestHandler):
     """Request handler for error pages"""
@@ -399,7 +470,6 @@ class CourseHandler(webapp2.RequestHandler) :
         #Not logged in || not in datastore
         d = CourseData.all()
         d.filter('course_id =', id)
-            
         if d.count(1):
             for course in d.run():
                 template_values = {
