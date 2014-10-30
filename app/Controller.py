@@ -446,7 +446,8 @@ class CourseHandler(webapp2.RequestHandler) :
                                 'current_year' : date.today().year,
                                 'user' : user,
                                 'logout' : logout_url,
-                                'login' : login_url
+                                'login' : login_url,
+                                'course_name' : course.course_name
                             }
                     
                             renderTemplate(self.response, 'edit_course.html', template_values) 
