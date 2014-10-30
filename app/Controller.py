@@ -70,7 +70,10 @@ class IntroHandler(webapp2.RequestHandler):
         
         template_values = {
             'page_title' : "Chalkboard",
-            'current_year' : date.today().year
+            'current_year' : date.today().year,
+            'user' : users.get_current_user(),
+            'logout' : users.create_logout_url('/'),
+            'login' : users.create_login_url('/instructor')
         }
         
         renderTemplate(self.response, 'index.html', template_values)
@@ -80,9 +83,11 @@ class IntroHandler(webapp2.RequestHandler):
         logging.error('Template mapping exception, unmapped tag: ' + str(exception))
         
         return self.redirect(uri='/error', code=307)
+        
 class NewCourseHandler(webapp2.RequestHandler):
     def get(self):
         renderTemplate(self.response, 'new_course.html', template_values)
+        
 class InstructorHandler(webapp2.RequestHandler):
     """RequestHandler for instructor page"""   
     def post(self):
@@ -142,6 +147,7 @@ class InstructorHandler(webapp2.RequestHandler):
             template_values = {
                 'page_title' : "Chalkboard",
                 'current_year' : date.today().year,
+                'user' : user,
                 'logout' : users.create_logout_url('/'),
                 'courses' : CourseData.get(user_data.courses)
             }
@@ -184,6 +190,7 @@ class InstructorHandler(webapp2.RequestHandler):
                     template_values = {
                         'page_title' : "Chalkboard",
                         'current_year' : date.today().year,
+                        'user' : user,
                         'logout' : logout_url,
                         'courses' : CourseData.get(user_data.courses)
                     }
@@ -205,6 +212,7 @@ class InstructorHandler(webapp2.RequestHandler):
                 template_values = {
                     'page_title' : "Chalkboard",
                     'current_year' : date.today().year,
+                    'user' : user,
                     'logout' : logout_url,
                     'courses' : CourseData.get(user_data.courses)
                 }
@@ -242,7 +250,9 @@ class DocumentsHandler(webapp2.RequestHandler):
             template_values = {
                 'page_title' : "Chalkboard",
                 'current_year' : date.today().year,
+                'user' : user,
                 'logout' : logout_url,
+                'login' : users.create_login_url('/documents'),
                 'courses' : CourseData.get(user_data.courses)
             }
             
@@ -280,7 +290,9 @@ class DocumentsHandler(webapp2.RequestHandler):
                 template_values = {
                     'page_title' : "Chalkboard",
                     'current_year' : date.today().year,
+                    'user' : user,
                     'logout' : logout_url,
+                    'login' : users.create_login_url('/documents'),
                     'courses' : CourseData.get(user_data.courses),
                     'upload_url' : upload_url
                 }
@@ -322,7 +334,10 @@ class ErrorHandler(webapp2.RequestHandler):
 
         template_values = {
             'page_title' : "Oh no...",
-            'current_year' : date.today().year
+            'current_year' : date.today().year,
+            'user' : users.get_current_user(),
+            'logout' : users.create_logout_url('/'),
+            'login' : users.create_login_url('/instructor')
         }
         
         renderTemplate(self.response, 'error.html', template_values)
@@ -334,7 +349,10 @@ class AboutHandler(webapp2.RequestHandler) :
         logging.debug('AboutHandler GET request: ' + str(self.request))
         template_values = {
             'page_title' : "About Chalkboard",
-            'current_year' : date.today().year
+            'current_year' : date.today().year,
+            'user' : users.get_current_user(),
+            'logout' : users.create_logout_url('/about'),
+            'login' : users.create_login_url('/about')
         }
 
         renderTemplate(self.response, 'about.html', template_values)
@@ -362,6 +380,7 @@ class CourseHandler(webapp2.RequestHandler) :
                 template_values = {
                     'page_title' : "Chalkboard",
                     'current_year' : date.today().year,
+                    'user' : user,
                     'logout' : logout_url,
                     'login' : login_url,
                     'course_name' : course.course_name,
