@@ -66,7 +66,7 @@ def renderTemplate(response, templatename, templatevalues) :
     basepath = os.path.split(os.path.dirname(__file__)) #extract the base path, since we are in the "app" folder instead of the root folder
     path = os.path.join(basepath[0], 'templates/' + templatename)
     html = template.render(path, templatevalues)
-    
+    logging.debug(html)
     response.out.write(html)
 
 def handle404(request, response, exception) :
@@ -480,6 +480,28 @@ class CourseHandler(webapp2.RequestHandler) :
         else:
         #redirect to error if course wasn't found (or if 2 courses share an ID???)
             self.redirect('/error')
+            
+class CourseListHandler(webapp2.RequestHandler) :
+    def post(self):
+        user = users.get_current_user()
+    
+        if(user):
+            d = UserData.all()
+            d.filter('user_id =', user.user_id())
+            
+            #User found, so edit page instead
+            if d.count(1):
+                for user_data in d.run():
+                    
+                    template_values = {
+                        'courses' : CourseData.get(user_data.courses)
+                    }
+                    
+                    renderTemplate(self.response, 'course_list.json', template_values) 
+                    return
+                    
+        #redirect to error if course wasn't found (or if 2 courses share an ID???)
+        self.redirect('/instructor')
 
 # list of URI/Handler routing tuples
 # the URI is a regular expression beginning with root '/' char
@@ -494,6 +516,7 @@ routeHandlers = [
     (r'/send_email', SendEmailHandler),
     (r'/email', EmailHandler),
     (r'/course/(\d+)', CourseHandler), #Default catch all to handle a course page request
+    (r'/course_list', CourseListHandler), #Handles JSON to list courses on /instructor
     (r'/.*', ErrorHandler)
 ]
 
