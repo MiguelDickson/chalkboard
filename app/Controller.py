@@ -86,12 +86,19 @@ class IntroHandler(webapp2.RequestHandler):
         
 class NewCourseHandler(webapp2.RequestHandler):
     def get(self):
+    
+        template_values = {
+            'page_title' : "Add new course",
+            'current_year' : date.today().year,
+            'user' : users.get_current_user(),
+            'logout' : users.create_logout_url('/'),
+            'login' : users.create_login_url('/instructor')
+        }
+    
         renderTemplate(self.response, 'new_course.html', template_values)
         
-class InstructorHandler(webapp2.RequestHandler):
-    """RequestHandler for instructor page"""   
     def post(self):
-        logging.debug('Instructorandler POST request: ' + str(self.request))
+        logging.debug('New Course POST request: ' + str(self.request))
         
         #retrieve the current user
         user = users.get_current_user()
@@ -144,18 +151,11 @@ class InstructorHandler(webapp2.RequestHandler):
                     user_data.courses.append(course.key()) #Add course key to user data
                     user_data.put()
             
-            template_values = {
-                'page_title' : "Chalkboard",
-                'current_year' : date.today().year,
-                'user' : user,
-                'logout' : users.create_logout_url('/'),
-                'courses' : CourseData.get(user_data.courses)
-            }
+            self.redirect('/instructor')
         else : 
             self.redirect(users.create_login_url('/instructor'))   
-            
-        renderTemplate(self.response, target_page, template_values)
-    
+        
+class InstructorHandler(webapp2.RequestHandler):
     def get(self):
         """Instructor page GET request handler"""
         logging.debug('InstructorHandler GET request: ' + str(self.request))
