@@ -506,6 +506,8 @@ routeHandlers = [
     (r'/new_course', NewCourseHandler),
     (r'/documents', DocumentsHandler),
     (r'/upload', UploadHandler),
+    (r'/send_email', SendEmailHandler),
+    (r'/email', EmailHandler),
     (r'/course/(\d+)', CourseHandler), #Default catch all to handle a course page request
     (r'/.*', ErrorHandler)
 ]
