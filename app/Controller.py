@@ -46,9 +46,9 @@ def generateURL() :
 def generateClassEmails(student_list) : 
     class_list = ""
     l = len(student_list)
-    logging.error("The length of the student list is:")
-    logging.error(l)
-    for num in range(0, l-2):
+    #logging.error("The length of the student list is:")
+    #logging.error(l)
+    for num in xrange(0, l-2):
         class_list += student_list[num]
         class_list += ","
     class_list+=student_list[len(student_list)-1]
@@ -335,24 +335,24 @@ class DocumentsHandler(webapp2.RequestHandler):
 
 class SendEmailHandler(webapp2.RequestHandler):
     def get(self):
-        logging.error('Here succesfully, I guess...')
+        #logging.error('Here succesfully, I guess...')
         user = users.get_current_user()
         if user is None:
-            logging.error('SendEmail Handler: not logged in for some reason.')    
+            #logging.error('SendEmail Handler: not logged in for some reason.')    
         if user:
-            logging.error('Here all right so far.')
+            #logging.error('Here all right so far.')
             logout_url = users.create_logout_url('/')
             d = UserData.all()
             d.filter('user_id =', user.user_id())
             if d.count(1):
-                logging.error('Here all right so far. #2')
+                #logging.error('Here all right so far. #2')
                 for user_data in d.run():
                     current_course = user_data.current_course_selected
                     logging.error(current_course)
                     e = CourseData.all()
                     e.filter('course_id =', current_course)
                     if e.count(1):
-                        logging.error('Here all right so far. #3')
+                        #logging.error('Here all right so far. #3')
                         for course_info in e.run():
                             students = course_info.student_list     
                             template_values = {
@@ -375,18 +375,26 @@ class SendEmailHandler(webapp2.RequestHandler):
 class EmailHandler(webapp2.RequestHandler):
     def post(self):
         user = users.get_current_user()
-        #if user is None:
-        #    self.redirect('/instructor')
-        #    return
+        if user is None:
+            self.redirect('/instructor')
         message = mail.EmailMessage()
         message.sender = user.email()
-        stu_list = self.request.get('student_list')
-        logging.error("The list sent to the handler was: " + stu_list)
-        logging.error("The message body was:" + self.request.get('message_body'))
-        message.bcc = generateClassEmails(self.request.get('student_list'))
-        message.body = self.request.get('message_body')
-        message.to = user.email()
-        message.send()
+        d = UserData.all()
+        d.filter('user_id =', user.user_id())
+        for user_data in d.run(): 
+            current_course = user_data.current_course_selected
+            #logging.error(current_course)
+            e = CourseData.all()
+            e.filter('course_id =', current_course)
+            for course_info in e.run():
+                stu_list = course_info.student_list
+                bcc_list = generateClassEmails(stu_list)
+                #logging.error("The first student in the list is: " + stu_list[0])
+                #logging.error("The message body was:" + self.request.get('message_body'))
+                message.bcc = bcc_list
+                message.body = self.request.get('message_body')
+                message.to = user.email()
+                message.send()
         
         
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler) :
