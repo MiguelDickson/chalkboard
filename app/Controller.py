@@ -19,7 +19,7 @@ class CourseData(db.Model):
     course_name = db.StringProperty()
     course_number = db.IntegerProperty()
     student_list = db.StringListProperty() #Stores a list of string (emails)
-    URL = db.StringProperty() #URL in the form /course/ID
+    course_id = db.StringProperty() #unique course ID
     department = db.StringProperty()
     university = db.StringProperty()
     instructor = db.StringProperty()
@@ -37,8 +37,8 @@ class UserData(db.Model) :
     courses = db.ListProperty(db.Key) #Stores a list of keys for courses
     is_active = db.BooleanProperty()
 	
-def generateURL() :
-	return "/course/123" #TODO: Generate real IDs
+def generateID() :
+	return '1234' #TODO: Generate real IDs
 
 def renderTemplate(response, templatename, templatevalues) :
     basepath = os.path.split(os.path.dirname(__file__)) #extract the base path, since we are in the "app" folder instead of the root folder
@@ -80,7 +80,9 @@ class IntroHandler(webapp2.RequestHandler):
         logging.error('Template mapping exception, unmapped tag: ' + str(exception))
         
         return self.redirect(uri='/error', code=307)
-        
+class NewCourseHandler(webapp2.RequestHandler):
+    def get(self):
+        renderTemplate(self.response, 'new_course.html', template_values)
 class InstructorHandler(webapp2.RequestHandler):
     """RequestHandler for instructor page"""   
     def post(self):
@@ -112,7 +114,7 @@ class InstructorHandler(webapp2.RequestHandler):
             course.year = int(self.request.get('year'))
             course.student_list = [""]
             course.is_active = True
-            course.URL = generateURL()
+            course.course_id = generateID()
             course.documents_list = [""]
             course.syllabus = None
             
@@ -161,9 +163,7 @@ class InstructorHandler(webapp2.RequestHandler):
         email = ''
         name = ''
         course = ''
-        
-        target_page = 'instructor.html'
-        
+                
         template_values = {
         
         }
@@ -184,10 +184,9 @@ class InstructorHandler(webapp2.RequestHandler):
                     template_values = {
                         'page_title' : "Chalkboard",
                         'current_year' : date.today().year,
-                        'logout' : logout_url
+                        'logout' : logout_url,
+                        'courses' : CourseData.get(user_data.courses)
                     }
-                        
-                    target_page = "new_course.html"
             #if no data was received, add data entry
             else:
                 #stores data
@@ -214,7 +213,7 @@ class InstructorHandler(webapp2.RequestHandler):
             self.redirect(users.create_login_url('/instructor'))        
         
         
-        renderTemplate(self.response, target_page, template_values)
+        renderTemplate(self.response, 'instructor.html', template_values)
 
     def handle_exception(self, exception, debug):
         # overrides the built-in master exception handler
@@ -333,7 +332,6 @@ class AboutHandler(webapp2.RequestHandler) :
 
     def get(self):
         logging.debug('AboutHandler GET request: ' + str(self.request))
-
         template_values = {
             'page_title' : "About Chalkboard",
             'current_year' : date.today().year
@@ -343,15 +341,46 @@ class AboutHandler(webapp2.RequestHandler) :
         
 class CourseHandler(webapp2.RequestHandler) :
     """Request handler for Course pages (public view)"""
-    def get(self):
-        logging.debug('CourseHandler GET request: ' + str(self.request))
+    def get(self, id):
+        logging.debug('CourseHandler GET request: ' + str(self.request) + id)
         
-        template_values = {
-            'page_title' : "About Chalkboard",
-            'current_year' : date.today().year
-        }
+        user = users.get_current_user()
         
-        renderTemplate(self.response, 'error.html', template_values) #TODO: temporary redirect
+        login_url = ''
+        logout_url = ''
+        
+        if(user):
+            logout_url = users.create_logout_url('/')
+        else:
+            login_url = users.create_login_url('/')
+            
+        d = CourseData.all()
+        d.filter('course_id =', id)
+            
+        if d.count(1):
+            for course in d.run():
+                template_values = {
+                    'page_title' : "Chalkboard",
+                    'current_year' : date.today().year,
+                    'logout' : logout_url,
+                    'login' : login_url,
+                    'course_name' : course.course_name,
+                    'course_number' : course.course_number,
+                    'student_list' : course.student_list,
+                    'department' : course.department,
+                    'university' : course.university,
+                    'instructor' : course.instructor,
+                    'email' : course.email,
+                    'year' : course.year,
+                    'semester' : course.semester,
+                    'is_active' : course.is_active,
+                    'course_id' : course.course_id
+                }
+            print "JHIDS"    
+            renderTemplate(self.response, 'course.html', template_values) 
+        else:
+        #redirect to error if course wasn't found (or if 2 courses share an ID???)
+            renderTemplate(self.response, 'error.html', template_values)
 
 # list of URI/Handler routing tuples
 # the URI is a regular expression beginning with root '/' char
@@ -360,9 +389,10 @@ routeHandlers = [
     (r'/about', AboutHandler),
     (r'/error', ErrorHandler),
     (r'/instructor', InstructorHandler),
+    (r'/new_course', NewCourseHandler),
     (r'/documents', DocumentsHandler),
     (r'/upload', UploadHandler),
-    (r'/course/.*', CourseHandler), #Default catch all to handle a course page request
+    (r'/course/(\d+)', CourseHandler), #Default catch all to handle a course page request
     (r'/.*', ErrorHandler)
 ]
 
