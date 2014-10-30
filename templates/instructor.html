@@ -5,12 +5,17 @@
 				<h2><u>Course List: </h2></u>
 				
 				{% for course in courses %}
-				<a href="{{course.URL}}">{{course.course_name}}</a>
+				<a href="/course/{{course.course_id}}">{{course.course_name}}</a>
 				<br>
 				{% endfor %}
 				
 				<br>
-				<a href="/instructor">Create New Course</a>
+				<a href="/new_course">Create New Course</a><br>
+				<a href="/send_email">Send an Email to {{current_course.course_name}}</a>
+				<br>
+				<br>
+				<br>
+				<a href={{logout}}>Logout</a><br>
 			</div>
 		</div>
 	{% endblock %}
