@@ -342,7 +342,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler) :
 
 class SendEmailHandler(webapp2.RequestHandler):
     def get(self):
-        #logging.error('Here succesfully, I guess...')
+        #logging.error('Here successfully, I guess...')
         user = users.get_current_user()
         if user is None:
             self.redirect('/instructor')
@@ -367,8 +367,8 @@ class SendEmailHandler(webapp2.RequestHandler):
                                 'student_list' : students,
                                 'page_title' : "Chalkboard",
                                 'current_year' : date.today().year,
-                                'logout' : users.get_logout_url,     
-                                'login' : users.get_login_url,  
+                                'logout' : users.create_logout_url,     
+                                'login' : users.create_login_url,  
                                 'user' : users.get_current_user
                             }
                         renderTemplate(self.response, 'send_email.html', template_values)                            
