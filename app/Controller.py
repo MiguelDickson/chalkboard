@@ -87,15 +87,20 @@ class IntroHandler(webapp2.RequestHandler):
 class NewCourseHandler(webapp2.RequestHandler):
     def get(self):
     
-        template_values = {
-            'page_title' : "Add new course",
-            'current_year' : date.today().year,
-            'user' : users.get_current_user(),
-            'logout' : users.create_logout_url('/'),
-            'login' : users.create_login_url('/instructor')
-        }
-    
-        renderTemplate(self.response, 'new_course.html', template_values)
+        user = users.get_current_user()
+        
+        if user:
+            template_values = {
+                'page_title' : "Add new course",
+                'current_year' : date.today().year,
+                'user' : user,
+                'logout' : users.create_logout_url('/'),
+                'login' : users.create_login_url('/instructor')
+            }
+        
+            renderTemplate(self.response, 'new_course.html', template_values)
+        else :
+            self.redirect(users.create_login_url('/instructor')) 
         
     def post(self):
         logging.debug('New Course POST request: ' + str(self.request))
