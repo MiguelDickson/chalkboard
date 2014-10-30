@@ -161,7 +161,7 @@ class NewCourseHandler(webapp2.RequestHandler):
                     course.documents_list = [""]
                     course.syllabus = None
                     course.put()
-                    user_data.course.append(course.key()) #Add course key to user data
+                    user_data.courses.append(course.key()) #Add course key to user data
                     user_data.put()
             
                     self.redirect('/instructor')
