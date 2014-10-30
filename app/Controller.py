@@ -90,17 +90,26 @@ class NewCourseHandler(webapp2.RequestHandler):
         user = users.get_current_user()
         
         if user:
-            template_values = {
-                'page_title' : "Add new course",
-                'current_year' : date.today().year,
-                'user' : user,
-                'logout' : users.create_logout_url('/'),
-                'login' : users.create_login_url('/instructor')
-            }
+            d = UserData.all()
+            d.filter('user_id =', user.user_id())
+            
+            #if data was received, grab it
+            if d.count(1):
+                for user_data in d.run():
+                    template_values = {
+                        'page_title' : "Add new course",
+                        'current_year' : date.today().year,
+                        'user' : user,
+                        'logout' : users.create_logout_url('/'),
+                        'login' : users.create_login_url('/instructor')
+                    }
+                    
+                    renderTemplate(self.response, 'new_course.html', template_values)
+                    return
+                    
         
-            renderTemplate(self.response, 'new_course.html', template_values)
-        else :
-            self.redirect(users.create_login_url('/instructor')) 
+        #Else - not logged in or not a user of our site, so redirect
+        self.redirect(users.create_login_url('/instructor')) 
         
     def post(self):
         logging.debug('New Course POST request: ' + str(self.request))
@@ -118,47 +127,39 @@ class NewCourseHandler(webapp2.RequestHandler):
         }
         
         if user :
-            #grab all the post parameters and store into a course db model
-            course = CourseData()
-            
-            course.course_name = self.request.get('course')
-            course.instructor = self.request.get('name')
-            course.email = self.request.get('email')
-            course.course_number = int(self.request.get('number'))
-            course.university = self.request.get('university')
-            course.department = self.request.get('department')
-            course.semester = self.request.get('semester')
-            course.year = int(self.request.get('year'))
-            course.student_list = [""]
-            course.is_active = True
-            course.course_id = generateID()
-            course.documents_list = [""]
-            course.syllabus = None
-            
-            course.put()
-            
-            
             d = UserData.all()
             d.filter('user_id =', user.user_id())
             
-            if d.count(0) :
-                #stores data since no user with this ID is found
-                user_data = UserData()
-                user_data.user_id = user.user_id()
-                user_data.user_name = user.nickname()            
-                user_data.user_email = user.email()    
-                user_data.is_active = True
-                user_data.courses = [course]
-                
-                user_data.put()
-            else :
+            #if data was received, grab it
+            if d.count(1):
                 for user_data in d.run():
+                    #grab all the post parameters and store into a course db model
+                    course = CourseData()
+                    
+                    course.course_name = self.request.get('course')
+                    course.instructor = self.request.get('name')
+                    course.email = self.request.get('email')
+                    course.course_number = int(self.request.get('number'))
+                    course.university = self.request.get('university')
+                    course.department = self.request.get('department')
+                    course.semester = self.request.get('semester')
+                    course.year = int(self.request.get('year'))
+                    course.student_list = [""]
+                    course.is_active = True
+                    course.course_id = generateID()
+                    course.documents_list = [""]
+                    course.syllabus = None
+                    
+                    course.put()
+            
                     user_data.courses.append(course.key()) #Add course key to user data
                     user_data.put()
             
-            self.redirect('/instructor')
-        else : 
-            self.redirect(users.create_login_url('/instructor'))   
+                    self.redirect('/instructor')
+                    return
+        
+        #Else - not logged in or not in our datastore
+        self.redirect(users.create_login_url('/instructor'))   
         
 class InstructorHandler(webapp2.RequestHandler):
     def get(self):
@@ -369,21 +370,40 @@ class CourseHandler(webapp2.RequestHandler) :
         
         user = users.get_current_user()
         
-        login_url = ''
-        logout_url = ''
+        login_url = users.create_login_url('/course/' + str(id))
+        logout_url = users.create_logout_url('/course/' + str(id))
         
         if(user):
-            logout_url = users.create_logout_url('/')
-        else:
-            login_url = users.create_login_url('/')
+            d = UserData.all()
+            d.filter('user_id =', user.user_id())
             
+            #User found, so edit page instead
+            if d.count(1):
+                for user_data in d.run():
+                    c = CourseData.all()
+                    c.filter('course_id =', id)
+                    
+                    if c.count(1):
+                        for course in c.run():
+                            template_values = {
+                                'page_title' : 'Edit: ' + course.course_name,
+                                'current_year' : date.today().year,
+                                'user' : user,
+                                'logout' : logout_url,
+                                'login' : login_url
+                            }
+                    
+                            renderTemplate(self.response, 'edit_course.html', template_values) 
+                            return
+                    
+        #Not logged in || not in datastore
         d = CourseData.all()
         d.filter('course_id =', id)
             
         if d.count(1):
             for course in d.run():
                 template_values = {
-                    'page_title' : "Chalkboard",
+                    'page_title' : course.course_name,
                     'current_year' : date.today().year,
                     'user' : user,
                     'logout' : logout_url,
@@ -404,7 +424,7 @@ class CourseHandler(webapp2.RequestHandler) :
             renderTemplate(self.response, 'course.html', template_values) 
         else:
         #redirect to error if course wasn't found (or if 2 courses share an ID???)
-            renderTemplate(self.response, 'error.html', template_values)
+            self.redirect('/error')
 
 # list of URI/Handler routing tuples
 # the URI is a regular expression beginning with root '/' char
