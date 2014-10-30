@@ -5,7 +5,7 @@
 				<h2><u>Course List: </h2></u>
 				
 				{% for course in courses %}
-				<a href="{{course.course_id}}">{{course.course_name}}</a>
+				<a href="/course/{{course.course_id}}">{{course.course_name}}</a>
 				<br>
 				{% endfor %}
 				
