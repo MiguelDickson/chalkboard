@@ -218,7 +218,6 @@ class InstructorHandler(webapp2.RequestHandler):
                 user_data.user_name = user.nickname()            
                 user_data.user_email = user.email()    
                 user_data.is_active = True
-                user_data.current_course_selected = ""
                 user_data.courses = []
             
                 user_data.put()
@@ -245,8 +244,42 @@ class InstructorHandler(webapp2.RequestHandler):
         
         return self.redirect(uri='/error', code=307)
 
-class DocumentsHandler(webapp2.RequestHandler):   
+class DocumentsHandler(webapp2.RequestHandler):
+    #"""RequestHandler for Documents page"""
+    def post(self):
+        
+        name = self.request.get('name')
+        email = self.request.get('email')
+        course = self.request.get('course')
+        
+        logging.debug('UploadHandler POST request: ' + str(self.request))
+    
+        user = users.get_current_user();
+        
+        template_values = {}
+        if user:
+            #stores data
+                        
+            logout_url = users.create_logout_url('/')
+            
+            template_values = {
+                'page_title' : "Chalkboard",
+                'current_year' : date.today().year,
+                'user' : user,
+                'logout' : logout_url,
+                'login' : users.create_login_url('/documents'),
+                'courses' : CourseData.get(user_data.courses)
+            }
+            
+        else:
+            self.redirect(users.create_login_url('/instructor'))
+
+        #redirects back to instructor page (should show new data)
+        #renderTemplate(self.response, 'instructor.html', template_values)
+    
     def get(self):
+        upload_url = blobstore.create_upload_url('/upload');
+    
         """Instructor page GET request handler"""
         logging.debug('UploadHandler GET request: ' + str(self.request))
     
@@ -256,27 +289,37 @@ class DocumentsHandler(webapp2.RequestHandler):
         target_page = 'documents.html'
                 
         #check if signed in
-        if(user):
+        if user:
+            logout_url = users.create_logout_url('/')
+                        
             d = UserData.all()
             d.filter('user_id =', user.user_id())
             
-            #User found, so edit page instead
+            #if data was received, grab it
             if d.count(1):
                 for user_data in d.run():
-                    template_values = {
-                        'page_title' : "Upload Document",
-                        'current_year' : date.today().year,
-                        'user' : user,
-                        'logout' : users.create_logout_url('/'),
-                        'login' : users.create_login_url('/documents'),
-                        'upload_url' : blobstore.create_upload_url('/upload')
-                    }
-                    
-                    renderTemplate(self.response, target_page, template_values)
-                    return
+                    email = user_data.user_email
+                    name = user_data.user_name
+                    course = user_data.course_name
                 
-        #if no data was received, redirect to new course page (to make data)
-        self.redirect(users.create_login_url('/instructor'))        
+                template_values = {
+                    'page_title' : "Chalkboard",
+                    'current_year' : date.today().year,
+                    'user' : user,
+                    'logout' : logout_url,
+                    'login' : users.create_login_url('/documents'),
+                    'courses' : CourseData.get(user_data.courses),
+                    'upload_url' : upload_url
+                }
+            #if no data was received, redirect to new course page (to make data)
+            else:
+                target_page = 'instructor.html'
+                            
+        else :
+            self.redirect(users.create_login_url('/instructor'))        
+        
+        
+        renderTemplate(self.response, target_page, template_values)
 
     def handle_exception(self, exception, debug):
         # overrides the built-in master exception handler
@@ -286,29 +329,80 @@ class DocumentsHandler(webapp2.RequestHandler):
         
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler) :
     def post(self):
+        upload_files = self.get_uploads('file')
+        blob_info = upload_files[0];
+        self.redirect(users.create_login_url('/instructor'))
         user = users.get_current_user();
-        
-        if (user) :
+        d = UserData.all()
+        d.filter('user_id =', user.user_id())
+        if d.count(1):
+            for user_data in d.run():
+                user_data.documentlist.append(blob_info.key());
+                user_data.put();
+
+class SendEmailHandler(webapp2.RequestHandler):
+    def get(self):
+        #logging.error('Here successfully, I guess...')
+        user = users.get_current_user()
+        if user is None:
+            self.redirect('/instructor')
+            #logging.error('SendEmail Handler: not logged in for some reason.')    
+        if user:
+            logout_url = users.create_logout_url('/')
             d = UserData.all()
             d.filter('user_id =', user.user_id())
             if d.count(1):
+                #logging.error('Here all right so far. #2')
                 for user_data in d.run():
-                    upload_files = self.get_uploads('file')
-                    blob_info = upload_files[0];
-
-                    c = CourseData.all()
-                    c.filter('course_id =', user_data.current_course_selected)
-                    
-                    if c.count(1) :
-                        for course in c.run():
-                            course.document_list.append(blob_info.key());
-                            course.put();
-                    
-                            self.redirect('/course/' + user_data.current_course_selected)
-                            return
-                            
-        #if no data was received, redirect to new course page (to make data)
-        self.redirect(users.create_login_url('/instructor'))          
+                    current_course = user_data.current_course_selected
+                    logging.error(current_course)
+                    e = CourseData.all()
+                    e.filter('course_id =', current_course)
+                    if e.count(1):
+                        #logging.error('Here all right so far. #3')
+                        for course_info in e.run():
+                            students = course_info.student_list     
+                            template_values = {
+                                'current_course' : course_info,
+                                'student_list' : students,
+                                'page_title' : "Chalkboard",
+                                'current_year' : date.today().year,
+                                'logout' : users.create_logout_url,     
+                                'login' : users.create_login_url,  
+                                'user' : users.get_current_user
+                            }
+                        renderTemplate(self.response, 'send_email.html', template_values)                            
+                    else:
+                        self.redirect('/instructor')
+            else:
+                self.redirect('/insructor')           
+        else:
+            self.redirect('/instructor')
+ 
+class EmailHandler(webapp2.RequestHandler):
+    def post(self):
+        user = users.get_current_user()
+        if user is None:
+            self.redirect('/instructor')
+        message = mail.EmailMessage()
+        message.sender = user.email()
+        d = UserData.all()
+        d.filter('user_id =', user.user_id())
+        for user_data in d.run(): 
+            current_course = user_data.current_course_selected
+            #logging.error(current_course)
+            e = CourseData.all()
+            e.filter('course_id =', current_course)
+            for course_info in e.run():
+                stu_list = course_info.student_list
+                bcc_list = generateClassEmails(stu_list)
+                #logging.error("The first student in the list is: " + stu_list[0])
+                #logging.error("The message body was:" + self.request.get('message_body'))
+                message.bcc = bcc_list
+                message.body = self.request.get('message_body')
+                message.to = user.email()
+                message.send()
+                self.redirect('/instructor')               
         
 class ErrorHandler(webapp2.RequestHandler):
     """Request handler for error pages"""
@@ -363,9 +457,6 @@ class CourseHandler(webapp2.RequestHandler) :
                     
                     if c.count(1):
                         for course in c.run():
-                            user_data.current_course_selected = id #Record "last edited" page
-                            user_data.put()
-                        
                             template_values = {
                                 'page_title' : 'Edit: ' + course.course_name,
                                 'current_year' : date.today().year,
@@ -380,7 +471,6 @@ class CourseHandler(webapp2.RequestHandler) :
         #Not logged in || not in datastore
         d = CourseData.all()
         d.filter('course_id =', id)
-            
         if d.count(1):
             for course in d.run():
                 template_values = {
