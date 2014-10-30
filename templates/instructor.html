@@ -4,7 +4,6 @@
 			<div id="introText" class="introColumn">
 				<h2><u>Course List: </h2></u>
 							
-				<a href="javascript:courseList();">Show All</a><br><br>
 				<div id="courselist"></div>
 				
 				<script>
@@ -23,6 +22,8 @@
 					  }
 					  postParameters(xmlHttp, '/course_list', '');
 					}
+					
+					courseList(); //Call function
 					
 					// this dynamically builds the list of URLS
 					function updateCourseList(courses) 
