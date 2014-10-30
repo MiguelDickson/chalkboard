@@ -38,9 +38,19 @@ class UserData(db.Model) :
     courses = db.ListProperty(db.Key) #Stores a list of keys for courses
     is_active = db.BooleanProperty()
     current_course_selected = db.StringProperty()
-	
+
+#TODO:  temporary borrowed from STACK OVERFLOW
+def static_var(varname, value):
+    def decorate(func):
+        setattr(func, varname, value)
+        return func
+    return decorate
+
+@static_var("counter", 0)	
+
 def generateID() :
-	return '1234' #TODO: Generate real IDs
+    generateID.counter += 1
+    return str(generateID.counter) #TODO: Generate real IDs
 
 def generateClassEmails(student_list) : 
     class_list = ""
@@ -155,7 +165,7 @@ class NewCourseHandler(webapp2.RequestHandler):
                     course.department = self.request.get('department')
                     course.semester = self.request.get('semester')
                     course.year = int(self.request.get('year'))
-                    course.student_list = [""]
+                    course.student_list = ["mlucient@gmail.com"] #TODO:  Remove hardcoded email for presentation
                     course.is_active = True
                     course.course_id = generateID()
                     course.documents_list = [""]
