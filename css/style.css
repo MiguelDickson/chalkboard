@@ -96,10 +96,16 @@
 		float: left;
 		color: #438EFF;
 		margin-left: 15px;
+		text-decoration: none;
 	}
 	
 	#logo a:hover{
 		text-shadow: 0 0 12px #505050;
+		text-decoration: none;
+	}
+	
+	#logo a {
+		text-decoration: none;
 	}
 	
 	#loginDiv {
@@ -108,8 +114,14 @@
 		float: right;
 		font-size: 23;
 		margin-right: 15px;
+		text-decoration: none;
 	}
 	
 	#loginDiv a:hover{
 		text-shadow: 0 0 12px #505050;
+		text-decoration: none;
+	}
+	
+	#loginDiv a {
+		text-decoration: none;
 	}
