@@ -3,7 +3,8 @@
 		<div id="bodyarea">
 			<div id="introText" class="introColumn">
 				<h2><u>Course List: </h2></u>
-							
+                <div id="test"></div>
+                <br>
 				<div id="courselist"></div>
 				
 				<script>
@@ -15,7 +16,7 @@
 						xmlHttp.onreadystatechange = function() 
 						{
 							if (xmlHttp.readyState == 4) 
-							{
+							{                                
 								var courses = JSON.parse(xmlHttp.responseText);
 								updateCourseList(courses);
 						}
@@ -34,7 +35,7 @@
 					  {
 						for (var i = 0; i < courses.length; i++) 
 						{
-						  text += '<a href="/course/' + courses[i].id + '">' + courses[i].name + '</a><br>';
+						  text += '<a href="/course-' + courses[i].id + '">' + courses[i].name + '</a><br>';
 						}
 						 setText('courselist', text);
 					  }
