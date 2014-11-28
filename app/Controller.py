@@ -1,6 +1,7 @@
 import os
 import webapp2
 import logging
+import calendar
 from google.appengine.ext.webapp import template
 from google.appengine.api import users             
 from google.appengine.api import mail 
@@ -9,6 +10,7 @@ from google.appengine.ext import db
 from google.appengine.ext import blobstore     
 from google.appengine.ext.webapp import blobstore_handlers     
 from datetime import date
+from datetime import time
 
 # logging setup
 # TODO set to INFO in production
@@ -16,6 +18,16 @@ logging.getLogger(__name__).setLevel(logging.DEBUG)
 
 
 # General Utilities
+class CalendarEvent(db.Model) :
+    course = db.StringProperty()
+    name = db.StringProperty()
+    time = db.TimeProperty()
+    duration = db.StringProperty()
+    day = db.IntegerProperty()
+    month = db.IntegerProperty()
+    year = db.IntegerProperty()
+    notes = db.TextProperty()
+    
 class CourseData(db.Model):
     document_list = db.ListProperty(blobstore.BlobKey,indexed=False, default=[]) #Stores the keys for a list of documents
     course_name = db.StringProperty()
@@ -40,6 +52,7 @@ class UserData(db.Model) :
     is_active = db.BooleanProperty()
     current_course_selected = db.StringProperty()
 
+    
 #TODO:  temporary borrowed from STACK OVERFLOW
 def static_var(varname, value):
     def decorate(func):
@@ -52,7 +65,11 @@ def static_var(varname, value):
 def generateID() :
     generateID.counter += 1
     return str(generateID.counter) #TODO: Generate real IDs
-
+    
+def generateEventID() :
+    generateEventID.counter += 1
+    return str(generateEventID.counter)
+    
 def generateClassEmails(student_list) : 
     class_list = ""
     l = len(student_list)
@@ -88,8 +105,10 @@ def userCanEditCourse(courseID) : #Check if the user has a course
     
     if(currentUser):
         for course in currentUser.courses:
-            if CourseData.get(course).course_id == courseID :
-                return True
+            c = CourseData().get(course)
+            if(c):
+                if c.course_id == courseID :
+                    return True
     return False
     
 def getCourseData(courseID) : #Returns the CourseData for the current course page
@@ -151,12 +170,12 @@ class AboutHandler(webapp2.RequestHandler) :
         renderTemplate(self.response, 'about.html', template_values)
         
 class CourseHandler(webapp2.RequestHandler) :
-    """Request handler for Course pages (public view)"""
+    """Request handler for Course pages"""
     def get(self, id):
         logging.debug('CourseHandler GET request: ' + str(self.request) + id)
         
-        login_url = users.create_login_url('/course/' + str(id))
-        logout_url = users.create_logout_url('/course/' + str(id))
+        login_url = users.create_login_url('/course-' + str(id))
+        logout_url = users.create_logout_url('/course-' + str(id))
         
         course = getCourseData(id)
         
@@ -173,7 +192,8 @@ class CourseHandler(webapp2.RequestHandler) :
                     'user' : getCurrentUserData(),
                     'logout' : logout_url,
                     'login' : login_url,
-                    'course_name' : course.course_name
+                    'course_name' : course.course_name,
+                    'course_id' : course.course_id
                 }
                         
                 renderTemplate(self.response, 'edit_course.html', template_values) 
@@ -183,6 +203,7 @@ class CourseHandler(webapp2.RequestHandler) :
                 template_values = {
                     'page_title' : course.course_name,
                     'current_year' : date.today().year,
+                    'current_month' : date.today().month,
                     'user' : getCurrentUserData(),
                     'logout' : logout_url,
                     'login' : login_url,
@@ -219,6 +240,58 @@ class CourseListHandler(webapp2.RequestHandler) :
         #redirect to error if course wasn't found (or if 2 courses share an ID???)
         self.redirect('/instructor')
 
+class CourseCalendarHandler(webapp2.RequestHandler):
+    def post(self):
+    #    course = getCourseData(id)
+        month_list = ['','January', 'February', 'March', 'April', 'May', 'June', 
+            'July', 'August', 'September', 'October', 'November', 'December']
+        
+        # get POST parameters (month and year)
+        m = self.request.get('month')
+        y = self.request.get('year')
+        id = self.request.get('course')
+        month = int(m)
+        year = int(y)
+        if ((month == 0) and (year == 0)):
+            month = date.today().month
+            year = date.today().year
+        
+        my_calendar = calendar.Calendar(6)
+        calendar_weeks = my_calendar.monthdatescalendar(year, month)
+        
+        course = getCourseData(id)
+        if(course):
+            
+            events = CalendarEvent().all()
+            if (events):
+                events.filter('course = ', id)
+                events.filter('year = ', year)
+                events.filter('month = ', month)
+
+                template_values = {
+                    'calendar' : calendar_weeks,
+                    'month' : month,
+                    'year' : year,
+                    'month_name' : month_list[month],
+                    'course_id' : course.course_id,
+                    'event_list' : events                                
+                }
+                
+                renderTemplate(self.response, 'course_calendar.json', template_values)
+            else:    
+                
+                template_values = {
+                    'calendar' : calendar_weeks,
+                    'month' : month,
+                    'year' : year,
+                    'month_name' : month_list[month],
+                    'event_list' : None
+                }
+        else:
+            renderTemplate(self.response, 'error.html', template_values)
+        return
+
+        
 class DocumentsHandler(webapp2.RequestHandler):
     def get(self):
         """Instructor page GET request handler"""
@@ -357,6 +430,175 @@ class InstructorHandler(webapp2.RequestHandler):
         logging.error('Template mapping exception, unmapped tag: ' + str(exception))
         
         return self.redirect(uri='/error', code=307)
+
+class NewCalendarEventHandler(webapp2.RequestHandler):
+    def get(self, id):
+        login_url = users.create_login_url('/course-' + str(id) + '-new_event' )
+        logout_url = users.create_logout_url('/course-' + str(id))
+        
+        course = getCourseData(id)
+        
+        if(course):
+            if(userCanEditCourse(id)):
+                user_data = getCurrentUserData()
+                user_data.current_course_selected = id #Record "last edited" page
+                user_data.put()
+                memcache.set(user_data.user_id, user_data)
+                            
+                template_values = {
+                    'page_title' : 'New Event: ' + course.course_name,
+                    'current_year' : date.today().year,
+                    'current_month' : date.today().month,
+                    'user' : getCurrentUserData(),
+                    'logout' : logout_url,
+                    'login' : login_url,
+                    'course_name' : course.course_name,
+                    'course_id' : course.course_id
+                }
+                        
+                renderTemplate(self.response, 'new_calendar_event.html', template_values) 
+                return
+            else:            
+                #Not the user who owns the course
+                template_values = {
+                    'page_title' : course.course_name,
+                    'current_year' : date.today().year,
+                    'current_month' : date.today().month,
+                    'user' : getCurrentUserData(),
+                    'logout' : logout_url,
+                    'login' : login_url,
+                    'course_name' : course.course_name,
+                    'course_number' : course.course_number,
+                    'student_list' : course.student_list,
+                    'department' : course.department,
+                    'university' : course.university,
+                    'instructor' : course.instructor,
+                    'email' : course.email,
+                    'year' : course.year,
+                    'semester' : course.semester,
+                    'is_active' : course.is_active,
+                    'course_id' : course.course_id
+                }
+
+                renderTemplate(self.response, 'course.html', template_values) 
+        else:
+            #redirect to error if course wasn't found (or if 2 courses share an ID???)
+            self.redirect('/error')
+            
+    def post(self):
+    
+        id = self.request.get('course_id')
+        login_url = users.create_login_url('/course-' + str(id) + '-new_event' )
+        logout_url = users.create_logout_url('/course-' + str(id))
+
+        course = getCourseData(id)
+
+        if(course):
+            if(userCanEditCourse(id)):
+                event = CalendarEvent()
+                
+                #course id 
+                event.course = id
+                
+                #event name
+                event.name = self.request.get('event_name')
+                
+                #event duration
+                durh = self.request.get('event_dur_h')
+                durm = self.request.get('event_dur_m')
+                event.duration = str(durh) + 'hr ' + str(durm) + 'mi'
+                
+                #event notes
+                event.notes = self.request.get('event_notes')
+                
+                #event date info
+                date_raw = self.request.get('event_date')
+                date_parts = date_raw.split('-')
+                my_date = date(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
+                event.year = my_date.year
+                event.month = my_date.month
+                event.day = my_date.day
+                
+                #event start time info
+                time_raw = self.request.get('event_time')
+                time_parts_raw = time_raw.split('-')
+                time_parts = time_parts_raw[0].split(':')
+                my_time = time(int(time_parts[0]), int(time_parts[1]))
+                event.time = my_time
+                
+                event.put()
+                template_values = {
+                    'page_title' : 'Edit: ' + course.course_name,
+                    'current_year' : date.today().year,
+                    'user' : getCurrentUserData(),
+                    'logout' : logout_url,
+                    'login' : login_url,
+                    'course_name' : course.course_name,
+                    'course_id' : course.course_id
+                }
+                renderTemplate(self.response, 'event_confirmation.html', template_values) 
+                return
+            else:            
+                #Not the user who owns the course
+                template_values = {
+                    'page_title' : course.course_name,
+                    'current_year' : date.today().year,
+                    'current_month' : date.today().month,
+                    'user' : getCurrentUserData(),
+                    'logout' : logout_url,
+                    'login' : login_url,
+                    'course_name' : course.course_name,
+                    'course_number' : course.course_number,
+                    'student_list' : course.student_list,
+                    'department' : course.department,
+                    'university' : course.university,
+                    'instructor' : course.instructor,
+                    'email' : course.email,
+                    'year' : course.year,
+                    'semester' : course.semester,
+                    'is_active' : course.is_active,
+                    'course_id' : course.course_id
+                }
+
+                renderTemplate(self.response, 'course.html', template_values) 
+        else:
+            #redirect to error if course wasn't found (or if 2 courses share an ID???)
+            self.redirect('/error')
+            
+class EventListHandler(webapp2.RequestHandler):
+    def get(self, id, year, month, day):
+        login_url = users.create_login_url('/course-' + str(id) + '-event-' + str(year) +'-' + str(month) + '-' + str(day))
+        logout_url = users.create_logout_url('/course-' + str(id) + '-event-' + str(year) +'-' + str(month) + '-' + str(day))
+        course = getCourseData(id)
+        my_date = date(int(year), int(month), int(day))
+        if(course):
+            
+            month_list = ['','January', 'February', 'March', 'April', 'May', 'June', 
+            'July', 'August', 'September', 'October', 'November', 'December']
+            #grab list of events for the specific course and day
+            events = CalendarEvent().all()
+            events.filter('course = ', id)
+            events.filter('year = ', my_date.year)
+            events.filter('month = ', my_date.month)
+            events.filter('day = ', my_date.day)
+        
+            template_values = {
+                'page_title' : course.course_name,
+                    'current_year' : date.today().year,
+                    'current_month' : date.today().month,
+                    'user' : getCurrentUserData(),
+                    'logout' : logout_url,
+                    'login' : login_url,
+                    'course_name' : course.course_name,
+                    'course_id' : course.course_id,
+                    'event_list' : events,
+                    'month_name' : month_list[int(month)]
+            }
+            renderTemplate(self.response, 'event.html', template_values)
+        else:
+            #redirect to error if course wasn't found (or if 2 courses share an ID???)
+            self.redirect('/error')
+            
         
 class NewCourseHandler(webapp2.RequestHandler):
     def get(self):
@@ -454,7 +696,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler) :
                 course.put();
                 memcache.set(course.course_id, course)
                                 
-                self.redirect('/course/' + user_data.current_course_selected)
+                self.redirect('/course-' + user_data.current_course_selected)
                 return            
                 
         #if no data was received, redirect to new course page (to make data)
@@ -464,7 +706,9 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler) :
 # the URI is a regular expression beginning with root '/' char
 routeHandlers = [
     (r'/about', AboutHandler),
-    (r'/course/(\d+)', CourseHandler), #Default catch all to handle a course page request
+    ('/course-(\d+)-new_event', NewCalendarEventHandler),
+    ('/course-(\d+)', CourseHandler), #Default catch all to handle a course page request
+    ('/course-(\d+)-event-(\d+)-(\d+)-(\d+)', EventListHandler),
     (r'/course_list', CourseListHandler), #Handles JSON to list courses on /instructor
     (r'/documents', DocumentsHandler),
     (r'/email', EmailHandler),
@@ -474,6 +718,8 @@ routeHandlers = [
     (r'/new_course', NewCourseHandler),
     (r'/send_email', SendEmailHandler),
     (r'/upload', UploadHandler),
+    (r'/calendar', CourseCalendarHandler),
+    (r'/new_event', NewCalendarEventHandler),
     (r'/.*', ErrorHandler)
 ]
 
