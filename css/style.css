@@ -59,6 +59,29 @@
 	a:active {
 	    color: #438EFF;
 	}
+    
+    button{
+        font-size: 30;
+    }
+    
+    td.calendar{
+        font-size : 30;
+        color : blue;
+    }
+    
+    td.calendar_weeks{
+        font-size : 30;
+        color : #438EFF;
+    }
+    
+    td.event{
+        font-size : 30;
+        color : red;
+    }
+    a.event{
+        font-size : 30;
+        color : red;
+    }
 
 
 	/**** 404/Error ****/
